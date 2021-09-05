@@ -7,7 +7,7 @@ def set_logging_level(level=20):
     logger.setlevel(level)
 
 def kubernetes_setup():
-    logger.info
+    logger.info("Validating Kubeconfig")
 
 def check_for_unscheduled_pods():
     logger.info("Checking for unscheduled pods")
