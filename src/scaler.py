@@ -11,9 +11,10 @@ def set_logging_level():
 
 def kubernetes_setup():
     logging.info("Validating Kubeconfig")
-    config.load_kube_config(
-    # os.path.join(os.environ["KUBECONFIG"], '.kube/config'))
-    os.path.join(os.environ["HOME"], '.kube/config'))
+    # config.load_kube_config(
+    # # os.path.join(os.environ["KUBECONFIG"], '.kube/config'))
+    # os.path.join(os.environ["HOME"], '.kube/config'))
+    config.load_kube_config()
 
 def check_for_unscheduled_pods():
     logging.info("Checking for unscheduled pods")
