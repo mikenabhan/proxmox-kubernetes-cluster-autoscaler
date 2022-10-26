@@ -1,8 +1,10 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python3
 
 from kubernetes import client, config
 import logging
 import os
+
+unschedulable_pods = {}
 
 def set_logging_level():
     logging.basicConfig(level=logging.INFO)
@@ -19,11 +21,24 @@ def kubernetes_setup():
 def check_for_unscheduled_pods():
     logging.info("Checking for unscheduled pods")
     v1 = client.CoreV1Api()
-    print("Listing pods with their IPs:")
+    # print("Listing pods with their IPs:")
     ret = v1.list_pod_for_all_namespaces(watch=False)
-    print(ret.items[0])
+    # print(ret.items[0].metadata.name)
+    # print(ret.items[0].status.conditions)
+    for i in ret.items:
+        # print(i.metadata.name)
+        if i.metadata.name == "unschedulable-pod":
+            # print(i)
+            # print(i.status)
+            for status in i.status.conditions:
+                if status.type == "PodScheduled" and status.status == "False" and status.reason == "Unschedulable":
+                    if "Insufficient cpu" in status.message or "Insufficient memory" in status.message:
+                        # print(status.message)
+                        unschedulable_pods[i.metadata.name]=i.metadata.namespace
+    logging.info(str(len(unschedulable_pods)) + " pods are unschedulable")                    
+    return len(unschedulable_pods)
     # for i in ret.items:
-        # print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+    #     print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
 
 def terraform_scale_up(new_nodes=1):
     logging.info("Scaling up " + str(new_nodes) + " additional nodes")
@@ -38,3 +53,4 @@ def scaler(interval=30):
 set_logging_level()
 kubernetes_setup()
 check_for_unscheduled_pods()
+print(unschedulable_pods)

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unschedulable-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    resources:
+      requests:
+        memory: "64000Mi"
+        cpu: "10000m"
+    ports:
+    - containerPort: 80
