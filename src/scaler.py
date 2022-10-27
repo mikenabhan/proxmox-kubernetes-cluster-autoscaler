@@ -4,11 +4,14 @@ from kubernetes import client, config, watch
 import logging
 import os
 import time
+import subprocess
 
 unschedulable_pods = {}
+scaleup_wait_stabilization_minutes = 5
+scaledown_wait_stabilization_minutes = 10
 
 def set_logging_level():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',level=logging.INFO,datefmt='%Y-%m-%d %H:%M:%S')
     logging.info("Setting Log Level to INFO")
     
 
@@ -36,6 +39,31 @@ def check_for_unscheduled_pods():
 
 def terraform_scale_up(new_nodes=1):
     logging.info(f"Scaling up {str(new_nodes)} additional nodes")
+    start_ready_nodes = get_ready_nodes()
+    start_pending_nodes = get_pending_nodes()
+    try:
+        print(f"Applying terraform")
+    except:
+        print(f"Terraform Failed to Apply")    
+
+    new_pending_nodes = get_pending_nodes()
+    loops = 0 #delete these test cases
+    while new_pending_nodes <= start_pending_nodes:
+        
+        new_pending_nodes = get_pending_nodes()
+        logging.info("Waiting 10s for new node to to contact k8s api")
+        time.sleep(10)
+        if loops < 1: #delete these test cases
+            loops += 1 #delete these test cases
+        else: #delete these test cases
+            new_pending_nodes += 1 #delete these test cases
+    if new_pending_nodes > start_pending_nodes:
+        while get_ready_nodes() < start_ready_nodes + new_nodes:
+            logging.info("Waiting 10s for new node to be ready")
+            time.sleep(10)
+
+
+
 
 def terraform_scale_down(down_nodes=1):
     logging.info(f"Scaling down {str(down_nodes)} nodes")
@@ -82,7 +110,7 @@ kubernetes_setup()
 # check_for_unscheduled_pods()
 # print(unschedulable_pods)
 
-# scaler()
+scaler()
 
-print(get_pending_nodes())
-print(get_ready_nodes())
+# print(get_pending_nodes())
+# print(get_ready_nodes())
